@@ -1,10 +1,15 @@
 ﻿
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using RaceDay2.API.Data;
 using RaceDay2.API.Models;
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace RaceDay2.API.Controllers
 {
@@ -13,11 +18,15 @@ namespace RaceDay2.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly RaceDayDbContext _context;
+        private readonly IConfiguration _configuration;
         private readonly PasswordHasher<User> _passwordHasher = new();
 
-        public AuthController(RaceDayDbContext context)
+        public AuthController(
+            RaceDayDbContext context,
+            IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public class RegisterRequest
@@ -54,6 +63,7 @@ namespace RaceDay2.API.Controllers
             public string LastName { get; set; } = string.Empty;
             public string Email { get; set; } = string.Empty;
             public string Role { get; set; } = string.Empty;
+            public string? Token { get; set; }
         }
 
         private static AuthResponse ToResponse(User user)
@@ -76,7 +86,8 @@ namespace RaceDay2.API.Controllers
             if (await _context.Users.AnyAsync(
                 u => u.Email == request.Email))
             {
-                return Conflict("An account with this email already exists.");
+                return Conflict(
+                    "An account with this email already exists.");
             }
 
             var user = new User
@@ -89,8 +100,8 @@ namespace RaceDay2.API.Controllers
                 CreatedDate = DateTime.UtcNow
             };
 
-            user.PasswordHash =
-                _passwordHasher.HashPassword(user, request.Password);
+            user.PasswordHash = _passwordHasher.HashPassword(
+                user, request.Password);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -115,7 +126,51 @@ namespace RaceDay2.API.Controllers
             if (verification == PasswordVerificationResult.Failed)
                 return Unauthorized("Invalid email or password.");
 
-            return Ok(ToResponse(user));
+            var key = _configuration["Jwt:Key"];
+            var issuer = _configuration["Jwt:Issuer"];
+            var audience = _configuration["Jwt:Audience"];
+
+            if (string.IsNullOrWhiteSpace(key) ||
+                string.IsNullOrWhiteSpace(issuer) ||
+                string.IsNullOrWhiteSpace(audience))
+            {
+                return StatusCode(
+                    500, "JWT configuration is missing.");
+            }
+
+            var claims = new[]
+            {
+                new Claim(
+                    ClaimTypes.NameIdentifier,
+                    user.UserID.ToString()),
+
+                new Claim(ClaimTypes.Name, user.Email),
+
+                new Claim(ClaimTypes.Email, user.Email),
+
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+
+            var signingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(key));
+
+            var credentials = new SigningCredentials(
+                signingKey,
+                SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: credentials);
+
+            var response = ToResponse(user);
+
+            response.Token = new JwtSecurityTokenHandler()
+                .WriteToken(token);
+
+            return Ok(response);
         }
     }
 }

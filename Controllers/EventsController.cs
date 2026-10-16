@@ -1,4 +1,4 @@
-﻿
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay2.API.Data;
@@ -6,6 +6,7 @@ using RaceDay2.API.Models;
 
 namespace RaceDay2.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class EventsController : ControllerBase
@@ -17,33 +18,46 @@ namespace RaceDay2.API.Controllers
             _context = context;
         }
 
+        // GET: api/Events
+        // Both authenticated Organisers and Participants can view events.
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
         {
             return await _context.Events.ToListAsync();
         }
 
+        // GET: api/Events/1
+        // Both authenticated Organisers and Participants can view an event.
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Event>> GetEvent(int id)
         {
             var item = await _context.Events.FindAsync(id);
 
             if (item == null)
+            {
                 return NotFound();
+            }
 
             return Ok(item);
         }
 
+        // POST: api/Events
+        // Only Organisers can create events.
+        [Authorize(Roles = "Organiser")]
         [HttpPost]
         public async Task<ActionResult<Event>> CreateEvent(Event item)
         {
             if (!await _context.Users.AnyAsync(
                 u => u.UserID == item.OrganiserID))
+            {
                 return BadRequest("The organiser does not exist.");
+            }
 
             if (!await _context.EventTypes.AnyAsync(
                 t => t.EventTypeID == item.EventTypeID))
+            {
                 return BadRequest("The event type does not exist.");
+            }
 
             item.EventID = 0;
             item.CreatedDate = DateTime.UtcNow;
@@ -53,6 +67,7 @@ namespace RaceDay2.API.Controllers
             item.Enrolments = new List<Enrolment>();
 
             _context.Events.Add(item);
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(
@@ -61,24 +76,36 @@ namespace RaceDay2.API.Controllers
                 item);
         }
 
+        // PUT: api/Events/1
+        // Only Organisers can update events.
+        [Authorize(Roles = "Organiser")]
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateEvent(int id, Event item)
+        public async Task<IActionResult> UpdateEvent(
+            int id, Event item)
         {
             if (id != item.EventID)
+            {
                 return BadRequest("The event ID does not match.");
+            }
 
             var existing = await _context.Events.FindAsync(id);
 
             if (existing == null)
+            {
                 return NotFound();
+            }
 
             if (!await _context.Users.AnyAsync(
                 u => u.UserID == item.OrganiserID))
+            {
                 return BadRequest("The organiser does not exist.");
+            }
 
             if (!await _context.EventTypes.AnyAsync(
                 t => t.EventTypeID == item.EventTypeID))
+            {
                 return BadRequest("The event type does not exist.");
+            }
 
             existing.OrganiserID = item.OrganiserID;
             existing.EventTypeID = item.EventTypeID;
@@ -94,24 +121,30 @@ namespace RaceDay2.API.Controllers
             return NoContent();
         }
 
+        // DELETE: api/Events/1
+        // Only Organisers can delete events.
+        [Authorize(Roles = "Organiser")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteEvent(int id)
         {
             var item = await _context.Events.FindAsync(id);
 
             if (item == null)
+            {
                 return NotFound();
+            }
 
             if (await _context.Categories.AnyAsync(
-                c => c.EventID == id) ||
+                    c => c.EventID == id) ||
                 await _context.Enrolments.AnyAsync(
-                e => e.EventID == id))
+                    e => e.EventID == id))
             {
                 return Conflict(
                     "Cannot delete an event that has categories or enrolments.");
             }
 
             _context.Events.Remove(item);
+
             await _context.SaveChangesAsync();
 
             return NoContent();

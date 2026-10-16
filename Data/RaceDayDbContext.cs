@@ -1,10 +1,10 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
-using RaceDay.API.Models;
+using RaceDay2.API.Models;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
-namespace RaceDay.API.Data
+namespace RaceDay2.API.Data
 {
     public class RaceDayDbContext : DbContext
     {

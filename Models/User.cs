@@ -2,7 +2,7 @@
 using RaceDay2.API.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace RaceDay.API.Models;
+namespace RaceDay2.API.Models;
 
 public class User
 {

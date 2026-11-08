@@ -1,14 +1,17 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace RaceDay.MVC.Models
+namespace RaceDay2.API.Models
 {
-    public class EventTypeViewModel
+    public class EventType
     {
         public int EventTypeID { get; set; }
 
-        [Required(ErrorMessage = "Event type name is required.")]
-        [StringLength(100)]
+        [Required]
+        [MaxLength(100)]
         public string TypeName { get; set; } = string.Empty;
+
+        public ICollection<Event> Events { get; set; }
+            = new List<Event>();
     }
 }

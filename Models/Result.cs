@@ -1,19 +1,24 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace RaceDay2.API.Models;
-
-public class Result
+namespace RaceDay2.API.Models
 {
-    public int ResultID { get; set; }
+    public class Result
+    {
+        public int ResultID { get; set; }
 
-    public int EnrolmentID { get; set; }
+        [Required]
+        public int EnrolmentID { get; set; }
 
-    public TimeSpan FinishTime { get; set; }
+        public TimeSpan FinishTime { get; set; }
 
-    public int FinishPosition { get; set; }
+        [Required]
+        public int FinishPosition { get; set; }
 
-    public DateTime ResultDate { get; set; } = DateTime.UtcNow;
+        public DateTime ResultDate { get; set; } = DateTime.UtcNow;
 
-    public Enrolment? Enrolment { get; set; }
+        public bool IsPublished { get; set; } = false;
+
+        public Enrolment? Enrolment { get; set; }
+    }
 }

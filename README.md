@@ -17,6 +17,7 @@ The API uses a SQL Server database and Entity Framework Core to manage data. Swa
 - JSON Web Tokens (JWT)
 - ASP.NET Core Identity password hashing
 - Git and GitHub
+- link for Youtube https://youtu.be/oy0R65voBdM?si=1ZxrmZdB1h4-VRJ3  
 
 ## 3. Main Features
 

@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay2.API.Data;
@@ -8,6 +9,7 @@ namespace RaceDay2.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CategoriesController : ControllerBase
     {
         private readonly RaceDayDbContext _context;
@@ -19,27 +21,76 @@ namespace RaceDay2.API.Controllers
 
         // GET: api/Categories
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
+        public async Task<IActionResult> GetCategories()
         {
-            return await _context.Categories.ToListAsync();
+            var categories = await _context.Categories
+                .Select(c => new
+                {
+                    c.CategoryID,
+                    c.EventID,
+                    c.CategoryName,
+                    c.MinimumAge,
+                    c.MaximumAge,
+                    c.Distance
+                })
+                .ToListAsync();
+
+            return Ok(categories);
         }
 
         // GET: api/Categories/1
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Category>> GetCategory(int id)
+        public async Task<IActionResult> GetCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _context.Categories
+                .Where(c => c.CategoryID == id)
+                .Select(c => new
+                {
+                    c.CategoryID,
+                    c.EventID,
+                    c.CategoryName,
+                    c.MinimumAge,
+                    c.MaximumAge,
+                    c.Distance
+                })
+                .FirstOrDefaultAsync();
 
             if (category == null)
-                return NotFound();
+                return NotFound("Category not found.");
 
             return Ok(category);
         }
 
+        // GET: api/Categories/event/1
+        [HttpGet("event/{eventId:int}")]
+        public async Task<IActionResult> GetCategoriesByEvent(int eventId)
+        {
+            var eventExists = await _context.Events
+                .AnyAsync(e => e.EventID == eventId);
+
+            if (!eventExists)
+                return NotFound("Event not found.");
+
+            var categories = await _context.Categories
+                .Where(c => c.EventID == eventId)
+                .Select(c => new
+                {
+                    c.CategoryID,
+                    c.EventID,
+                    c.CategoryName,
+                    c.MinimumAge,
+                    c.MaximumAge,
+                    c.Distance
+                })
+                .ToListAsync();
+
+            return Ok(categories);
+        }
+
         // POST: api/Categories
         [HttpPost]
-        public async Task<ActionResult<Category>> CreateCategory(
-            Category category)
+        [Authorize(Roles = "Organiser")]
+        public async Task<IActionResult> CreateCategory(Category category)
         {
             if (!await _context.Events.AnyAsync(
                 e => e.EventID == category.EventID))
@@ -47,20 +98,31 @@ namespace RaceDay2.API.Controllers
                 return BadRequest("The specified event does not exist.");
             }
 
+            category.CategoryID = 0;
             category.Event = null;
             category.Enrolments = new List<Enrolment>();
 
             _context.Categories.Add(category);
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(
                 nameof(GetCategory),
                 new { id = category.CategoryID },
-                category);
+                new
+                {
+                    category.CategoryID,
+                    category.EventID,
+                    category.CategoryName,
+                    category.MinimumAge,
+                    category.MaximumAge,
+                    category.Distance
+                });
         }
 
         // PUT: api/Categories/1
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Organiser")]
         public async Task<IActionResult> UpdateCategory(
             int id, Category category)
         {
@@ -91,6 +153,7 @@ namespace RaceDay2.API.Controllers
 
         // DELETE: api/Categories/1
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Organiser")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var category = await _context.Categories.FindAsync(id);
@@ -106,6 +169,7 @@ namespace RaceDay2.API.Controllers
             }
 
             _context.Categories.Remove(category);
+
             await _context.SaveChangesAsync();
 
             return NoContent();

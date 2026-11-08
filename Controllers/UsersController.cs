@@ -1,15 +1,18 @@
 ﻿
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay2.API.Data;
 using RaceDay2.API.Models;
-using System.ComponentModel.DataAnnotations;
 
 namespace RaceDay2.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly RaceDayDbContext _context;
@@ -83,8 +86,21 @@ namespace RaceDay2.API.Controllers
             };
         }
 
+        private int? GetCurrentUserID()
+        {
+            var userId = User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+            if (int.TryParse(userId, out int id))
+                return id;
+
+            return null;
+        }
+
         // GET: api/Users
+        // ORGANISER: VIEW ALL USERS
         [HttpGet]
+        [Authorize(Roles = "Organiser")]
         public async Task<ActionResult<IEnumerable<UserResponse>>> GetUsers()
         {
             var users = await _context.Users.ToListAsync();
@@ -93,9 +109,22 @@ namespace RaceDay2.API.Controllers
         }
 
         // GET: api/Users/1
+        // USERS: VIEW OWN PROFILE
+        // ORGANISER: VIEW ANY PROFILE
         [HttpGet("{id:int}")]
         public async Task<ActionResult<UserResponse>> GetUser(int id)
         {
+            var currentUserID = GetCurrentUserID();
+
+            if (currentUserID == null)
+                return Unauthorized();
+
+            if (currentUserID != id &&
+                !User.IsInRole("Organiser"))
+            {
+                return Forbid();
+            }
+
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
@@ -105,14 +134,17 @@ namespace RaceDay2.API.Controllers
         }
 
         // POST: api/Users
+        // PUBLIC USER REGISTRATION
         [HttpPost]
+        [AllowAnonymous]
         public async Task<ActionResult<UserResponse>> RegisterUser(
             RegisterUserRequest request)
         {
             if (await _context.Users.AnyAsync(
                 u => u.Email == request.Email))
             {
-                return Conflict("An account with this email already exists.");
+                return Conflict(
+                    "An account with this email already exists.");
             }
 
             var user = new User
@@ -129,6 +161,7 @@ namespace RaceDay2.API.Controllers
                 _passwordHasher.HashPassword(user, request.Password);
 
             _context.Users.Add(user);
+
             await _context.SaveChangesAsync();
 
             var response = ToResponse(user);
@@ -140,10 +173,19 @@ namespace RaceDay2.API.Controllers
         }
 
         // PUT: api/Users/1
+        // USERS: UPDATE OWN PROFILE
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateUser(
             int id, UpdateUserRequest request)
         {
+            var currentUserID = GetCurrentUserID();
+
+            if (currentUserID == null)
+                return Unauthorized();
+
+            if (currentUserID != id)
+                return Forbid();
+
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
@@ -152,7 +194,8 @@ namespace RaceDay2.API.Controllers
             if (await _context.Users.AnyAsync(
                 u => u.Email == request.Email && u.UserID != id))
             {
-                return Conflict("That email address is already in use.");
+                return Conflict(
+                    "That email address is already in use.");
             }
 
             user.FirstName = request.FirstName;
@@ -167,7 +210,9 @@ namespace RaceDay2.API.Controllers
         }
 
         // DELETE: api/Users/1
+        // ORGANISER ONLY
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Organiser")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -185,10 +230,10 @@ namespace RaceDay2.API.Controllers
             }
 
             _context.Users.Remove(user);
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
     }
 }
-

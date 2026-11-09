@@ -1,0 +1,160 @@
+﻿@model RaceDay.MVC.Models.EventViewModel
+
+@{
+    ViewData["Title"] = "Event Details";
+    var categories = ViewBag.Categories as IEnumerable<RaceDay.MVC.Models.CategoryViewModel>;
+    var role = Context.Session.GetString("Role");
+}
+
+<div class="container mt-5">
+
+    <a asp-controller="Events"
+       asp-action="Index"
+       class="btn btn-outline-secondary mb-4">
+        Back to Events
+    </a>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm">
+
+        @if (!string.IsNullOrWhiteSpace(Model.BannerImageURL))
+        {
+            <img src="@Model.BannerImageURL"
+                 class="card-img-top"
+                 alt="@Model.EventName"
+                 style="height:350px; object-fit:cover;" />
+        }
+
+        <div class="card-body p-4">
+
+            <h1 class="mb-3">@Model.EventName</h1>
+
+            <p class="text-muted">@Model.Description</p>
+
+            <hr />
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <strong>Event Date</strong>
+                    <p>@Model.EventDate.ToString("dd MMMM yyyy HH:mm")</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Location</strong>
+                    <p>@Model.Location</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Distance</strong>
+                    <p>@Model.Distance km</p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Event Type ID</strong>
+                    <p>@Model.EventTypeID</p>
+                </div>
+
+            </div>
+
+            <hr />
+
+            <h4 class="mb-3">Available Race Categories</h4>
+
+            @if (categories == null || !categories.Any())
+            {
+                <div class="alert alert-info">
+                    No categories have been added to this event yet.
+                    Please contact the Organiser.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Category</th>
+                                <th>Minimum Age</th>
+                                <th>Maximum Age</th>
+                                <th>Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var category in categories)
+                            {
+                                <tr>
+                                    <td>@category.CategoryName</td>
+                                    <td>@(category.MinimumAge?.ToString() ?? "No minimum")</td>
+                                    <td>@(category.MaximumAge?.ToString() ?? "No maximum")</td>
+                                    <td>@category.Distance km</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (role == "Participant")
+                {
+                    <h4 class="mb-3">Enrol for this Event</h4>
+
+                    <form asp-controller="Events"
+                          asp-action="Enrol"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="EventID"
+                               value="@Model.EventID" />
+
+                        <div class="mb-3">
+                            <label for="CategoryID" class="form-label">
+                                Select Your Race Category
+                            </label>
+
+                            <select name="CategoryID"
+                                    id="CategoryID"
+                                    class="form-select"
+                                    required>
+                                <option value="">-- Select a category --</option>
+
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category.CategoryID">
+                                        @category.CategoryName - @category.Distance km
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            Enrol Now
+                        </button>
+                    </form>
+                }
+                else if (role == "Organiser")
+                {
+                    <div class="alert alert-secondary">
+                        Organisers can manage this event but cannot enrol as participants.
+                    </div>
+                }
+            }
+
+        </div>
+    </div>
+</div>
+

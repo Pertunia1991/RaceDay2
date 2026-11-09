@@ -1,0 +1,80 @@
+﻿@model List<RaceDay.MVC.Models.ResultViewModel>
+
+@{
+    ViewData["Title"] = "My Results";
+}
+
+<div class="container mt-5">
+
+    <h1 class="mb-2">My Race Results</h1>
+
+    <p class="text-muted mb-4">
+        View your published race results and performance history.
+    </p>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-striped align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Event Date</th>
+                                <th>Category</th>
+                                <th>Finish Time</th>
+                                <th>Position</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var result in Model)
+                            {
+                                <tr>
+                                    <td>@result.EventName</td>
+                                    <td>@result.EventDate.ToString("dd MMM yyyy")</td>
+                                    <td>@result.CategoryName</td>
+                                    <td>@result.FinishTime</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            @result.FinishPosition
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            You do not have any published race results yet.
+        </div>
+    }
+
+    <a asp-controller="Home"
+       asp-action="Index"
+       class="btn btn-secondary mt-4">
+        Back to Dashboard
+    </a>
+
+</div>

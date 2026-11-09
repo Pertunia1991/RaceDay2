@@ -1,0 +1,75 @@
+﻿@model List<RaceDay.MVC.Models.OrganiserEnrolmentViewModel>
+
+@{
+    ViewData["Title"] = "Manage Enrolments";
+}
+
+<div class="container mt-4">
+    <h2>Manage Participant Enrolments</h2>
+    <p class="text-muted">
+        View all participants enrolled in RaceDay events.
+    </p>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            No participant enrolments have been recorded yet.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Enrolment ID</th>
+                        <th>Participant ID</th>
+                        <th>Event</th>
+                        <th>Category</th>
+                        <th>Enrolment Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var enrolment in Model)
+                    {
+                        <tr>
+                            <td>@enrolment.EnrolmentID</td>
+                            <td>@enrolment.ParticipantID</td>
+                            <td>@enrolment.EventName</td>
+                            <td>@enrolment.CategoryName</td>
+                            <td>@enrolment.EnrolmentDate.ToString("dd MMM yyyy")</td>
+                            <td>
+                                @if (enrolment.Status == "Confirmed")
+                                {
+                                    <span class="badge bg-success">
+                                        @enrolment.Status
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        @enrolment.Status
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <a asp-controller="Home"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Back to Dashboard
+    </a>
+</div>

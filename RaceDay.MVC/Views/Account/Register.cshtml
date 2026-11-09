@@ -1,0 +1,118 @@
+﻿@model RaceDay.MVC.Models.RegisterRequest
+
+@{
+    ViewData["Title"] = "Participant Registration";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white text-center">
+                    <h3>RaceDay</h3>
+                    <p class="mb-0">Join the RaceDay community</p>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <h4 class="text-center mb-4">
+                        Participant Registration
+                    </h4>
+
+                    <form asp-controller="Account"
+                          asp-action="Register"
+                          method="post">
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3">
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="FirstName"
+                                   class="form-label">
+                                First Name
+                            </label>
+                            <input asp-for="FirstName"
+                                   class="form-control"
+                                   placeholder="Enter first name" />
+                            <span asp-validation-for="FirstName"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LastName"
+                                   class="form-label">
+                                Last Name
+                            </label>
+                            <input asp-for="LastName"
+                                   class="form-control"
+                                   placeholder="Enter last name" />
+                            <span asp-validation-for="LastName"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email"
+                                   class="form-label">
+                                Email Address
+                            </label>
+                            <input asp-for="Email"
+                                   class="form-control"
+                                   placeholder="Enter email address" />
+                            <span asp-validation-for="Email"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber"
+                                   class="form-label">
+                                Phone Number
+                            </label>
+                            <input asp-for="PhoneNumber"
+                                   class="form-control"
+                                   placeholder="Enter phone number" />
+                            <span asp-validation-for="PhoneNumber"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password"
+                                   class="form-label">
+                                Password
+                            </label>
+                            <input asp-for="Password"
+                                   class="form-control"
+                                   placeholder="At least 8 characters" />
+                            <span asp-validation-for="Password"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-dark w-100">
+                            Create Participant Account
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <div class="card-footer text-center">
+                    Already registered?
+                    <a asp-controller="Account"
+                       asp-action="Login">
+                        Sign in
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

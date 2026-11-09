@@ -1,0 +1,270 @@
+﻿@model List<RaceDay.MVC.Models.ResultViewModel>
+
+@using RaceDay.MVC.Models
+
+@{
+    ViewData["Title"] = "Manage Results";
+
+    var events = ViewBag.Events as List<EventViewModel>
+        ?? new List<EventViewModel>();
+
+    var enrolments = ViewBag.Enrolments as List<OrganiserEnrolmentViewModel>
+        ?? new List<OrganiserEnrolmentViewModel>();
+
+    int? selectedEventID = ViewBag.SelectedEventID;
+    var resultEnrolmentIDs = Model.Select(r => r.EnrolmentID).ToHashSet();
+}
+
+<div class="container mt-5">
+
+    <h1 class="mb-2">Manage Race Results</h1>
+    <p class="text-muted mb-4">
+        Capture finishing times and positions, then publish results for participants.
+    </p>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="card-title">Select Event</h5>
+
+            <form asp-controller="Results"
+                  asp-action="Index"
+                  method="get">
+
+                <div class="row align-items-end">
+
+                    <div class="col-md-8">
+                        <label class="form-label">Event</label>
+
+                        <select name="eventId" class="form-select">
+                            <option value="">All Events</option>
+
+                            @foreach (var eventItem in events)
+                            {
+                                <option value="@eventItem.EventID"
+                                        selected="@(selectedEventID == eventItem.EventID)">
+                                    @eventItem.EventName
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">
+                            View Event Results
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="card-title mb-3">Capture Participant Results</h5>
+
+            @if (enrolments.Any())
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-striped align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Enrolment ID</th>
+                                <th>Event</th>
+                                <th>Category</th>
+                                <th>Participant ID</th>
+                                <th>Capture Result</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var enrolment in enrolments)
+                            {
+                                <tr>
+                                    <td>@enrolment.EnrolmentID</td>
+                                    <td>@enrolment.EventName</td>
+                                    <td>@enrolment.CategoryName</td>
+                                    <td>@enrolment.ParticipantID</td>
+
+                                    <td>
+                                        @if (resultEnrolmentIDs.Contains(enrolment.EnrolmentID))
+                                        {
+                                            <span class="badge bg-success">
+                                                Result Captured
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <form asp-controller="Results"
+                                                  asp-action="Create"
+                                                  method="post"
+                                                  class="d-flex flex-wrap gap-2">
+
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden"
+                                                       name="EnrolmentID"
+                                                       value="@enrolment.EnrolmentID" />
+
+                                                <input type="hidden"
+                                                       name="EventID"
+                                                       value="@enrolment.EventID" />
+
+                                                <input type="time"
+                                                       name="FinishTime"
+                                                       step="1"
+                                                       class="form-control"
+                                                       style="max-width:130px"
+                                                       required />
+
+                                                <input type="number"
+                                                       name="FinishPosition"
+                                                       min="1"
+                                                       class="form-control"
+                                                       placeholder="Position"
+                                                       style="max-width:110px"
+                                                       required />
+
+                                                <button type="submit"
+                                                        class="btn btn-primary btn-sm">
+                                                    Save
+                                                </button>
+
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">
+                    No participant enrolments were found for this selection.
+                </p>
+            }
+
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <h5 class="card-title mb-3">Captured Results</h5>
+
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-striped align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Participant ID</th>
+                                <th>Category</th>
+                                <th>Finish Time</th>
+                                <th>Position</th>
+                                <th>Publication Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var result in Model)
+                            {
+                                <tr>
+                                    <td>@result.EventName</td>
+                                    <td>@result.ParticipantID</td>
+                                    <td>@result.CategoryName</td>
+                                    <td>@result.FinishTime</td>
+                                    <td>@result.FinishPosition</td>
+
+                                    <td>
+                                        @if (result.IsPublished)
+                                        {
+                                            <span class="badge bg-success">
+                                                Published
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                Not Published
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (!result.IsPublished)
+                                        {
+                                            <form asp-controller="Results"
+                                                  asp-action="Publish"
+                                                  method="post">
+
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden"
+                                                       name="id"
+                                                       value="@result.ResultID" />
+
+                                                <button type="submit"
+                                                        class="btn btn-success btn-sm">
+                                                    Publish
+                                                </button>
+
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">
+                    No results have been captured yet.
+                </p>
+            }
+
+        </div>
+    </div>
+
+    <a asp-controller="Home"
+       asp-action="Index"
+       class="btn btn-secondary mt-4">
+        Back to Dashboard
+    </a>
+
+</div>

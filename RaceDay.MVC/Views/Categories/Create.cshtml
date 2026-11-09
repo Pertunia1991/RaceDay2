@@ -1,0 +1,101 @@
+﻿@model RaceDay.MVC.Models.CategoryViewModel
+
+@{
+    ViewData["Title"] = "Add Category";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Add Race Category</h4>
+                </div>
+
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3"></div>
+
+                        <input type="hidden" asp-for="EventID" />
+
+                        <div class="mb-3">
+                            <label asp-for="CategoryName"
+                                   class="form-label">
+                                Category Name
+                            </label>
+                            <input asp-for="CategoryName"
+                                   class="form-control"
+                                   placeholder="e.g. 10km Open" />
+                            <span asp-validation-for="CategoryName"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MinimumAge"
+                                       class="form-label">
+                                    Minimum Age
+                                </label>
+                                <input asp-for="MinimumAge"
+                                       type="number"
+                                       class="form-control"
+                                       placeholder="Optional" />
+                                <span asp-validation-for="MinimumAge"
+                                      class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MaximumAge"
+                                       class="form-label">
+                                    Maximum Age
+                                </label>
+                                <input asp-for="MaximumAge"
+                                       type="number"
+                                       class="form-control"
+                                       placeholder="Optional" />
+                                <span asp-validation-for="MaximumAge"
+                                      class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Distance"
+                                   class="form-label">
+                                Race Distance (km)
+                            </label>
+                            <input asp-for="Distance"
+                                   type="number"
+                                   step="0.01"
+                                   class="form-control"
+                                   placeholder="e.g. 10" />
+                            <span asp-validation-for="Distance"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                Save Category
+                            </button>
+
+                            <a asp-action="Index"
+                               asp-route-eventId="@Model.EventID"
+                               class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

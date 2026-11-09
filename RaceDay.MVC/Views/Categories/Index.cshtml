@@ -1,0 +1,145 @@
+﻿@model IEnumerable<RaceDay.MVC.Models.CategoryViewModel>
+
+@{
+    ViewData["Title"] = "Manage Categories";
+    var events = ViewBag.Events as IEnumerable<RaceDay.MVC.Models.EventViewModel>;
+    int? selectedEventId = ViewBag.SelectedEventID as int?;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Manage Categories</h2>
+            <p class="text-muted">Manage race categories for your events.</p>
+        </div>
+
+        @if (selectedEventId.HasValue)
+        {
+            <a asp-action="Create"
+               asp-route-eventId="@selectedEventId"
+               class="btn btn-primary">
+                Add Category
+            </a>
+        }
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form asp-action="Index" method="get">
+                <label class="form-label" for="eventId">
+                    Select Event
+                </label>
+
+                <div class="d-flex gap-2">
+                    <select name="eventId" id="eventId"
+                            class="form-select">
+                        @if (events != null)
+                        {
+                            @foreach (var eventItem in events)
+                            {
+                                <option value="@eventItem.EventID"
+                                        selected="@(selectedEventId == eventItem.EventID)">
+                                    @eventItem.EventName
+                                </option>
+                            }
+                        }
+                    </select>
+
+                    <button type="submit" class="btn btn-outline-primary">
+                        View
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (events == null || !events.Any())
+    {
+        <div class="alert alert-info">
+            No events are available. Create an event before adding categories.
+        </div>
+    }
+    else if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No categories have been added for this event yet.
+            Select Add Category to create the first one.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Category</th>
+                                <th>Minimum Age</th>
+                                <th>Maximum Age</th>
+                                <th>Distance (km)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var category in Model)
+                            {
+                                <tr>
+                                    <td>@category.CategoryName</td>
+                                    <td>@(category.MinimumAge?.ToString() ?? "No minimum")</td>
+                                    <td>@(category.MaximumAge?.ToString() ?? "No maximum")</td>
+                                    <td>@category.Distance</td>
+                                    <td>
+                                        <a asp-action="Edit"
+                                           asp-route-id="@category.CategoryID"
+                                           asp-route-eventId="@category.EventID"
+                                           class="btn btn-sm btn-warning">
+                                            Edit
+                                        </a>
+
+                                        <form asp-action="Delete"
+                                              method="post"
+                                              class="d-inline"
+                                              onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id"
+                                                   value="@category.CategoryID" />
+                                            <input type="hidden" name="eventId"
+                                                   value="@category.EventID" />
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-danger">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mt-4">
+        <a asp-controller="Home" asp-action="Index"
+           class="btn btn-outline-secondary">
+            Back to Dashboard
+        </a>
+    </div>
+</div>

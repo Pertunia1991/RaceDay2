@@ -1,0 +1,98 @@
+﻿@model List<RaceDay.MVC.Models.EnrolmentViewModel>
+
+@{
+    ViewData["Title"] = "My Enrolments";
+}
+
+<div class="container mt-5">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">My Enrolments</h2>
+        <p class="text-muted">
+            View the events you have enrolled in and your enrolment status.
+        </p>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            You have not enrolled in any events yet.
+        </div>
+
+        <a asp-controller="Events"
+           asp-action="Index"
+           class="btn btn-primary">
+            Browse Events
+        </a>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Event</th>
+                        <th>Event Date</th>
+                        <th>Location</th>
+                        <th>Category</th>
+                        <th>Distance</th>
+                        <th>Enrolment Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var enrolment in Model)
+                    {
+                        <tr>
+                            <td>@enrolment.EventName</td>
+
+                            <td>
+                                @enrolment.EventDate.ToString("dd MMM yyyy")
+                            </td>
+
+                            <td>@enrolment.Location</td>
+
+                            <td>@enrolment.CategoryName</td>
+
+                            <td>@enrolment.Distance km</td>
+
+                            <td>
+                                @enrolment.EnrolmentDate.ToString("dd MMM yyyy")
+                            </td>
+
+                            <td>
+                                @if (enrolment.Status == "Confirmed")
+                                {
+                                    <span class="badge bg-success">
+                                        @enrolment.Status
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        @enrolment.Status
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <a asp-controller="Home"
+       asp-action="Index"
+       class="btn btn-secondary mt-3">
+        Back to Dashboard
+    </a>
+
+</div>

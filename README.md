@@ -1,121 +1,299 @@
-# RaceDay API
+
+# RaceDay – Race Event Management System
 
 ## 1. Project Overview
 
-RaceDay API is an ASP.NET Core Web API developed to support the management of running and walking events. The system provides functionality for user authentication, event management, event types, categories, participant enrolments and event results.
+RaceDay is a web-based race event management system developed as part of the PROG6212 Programming 2B Practical Project.
 
-The API uses a SQL Server database and Entity Framework Core to manage data. Swagger UI is used to document and test the available API endpoints.
+The system provides a platform for managing sporting events and supporting the interaction between event organisers and participants.
+
+Part 3 extends the system developed in Parts 1 and 2 by introducing an ASP.NET Core MVC web application that communicates with the RESTful API developed in Part 2.
+
+The application uses a role-based approach to provide functionality for Organisers and Participants.
 
 ## 2. Technologies Used
 
+The project uses the following technologies:
+
 - C#
+- ASP.NET Core MVC
 - ASP.NET Core Web API
 - .NET 8
-- Microsoft SQL Server Express
 - Entity Framework Core
-- Swagger / OpenAPI
-- JSON Web Tokens (JWT)
-- ASP.NET Core Identity password hashing
-- Git and GitHub
-- link for Youtube https://youtu.be/oy0R65voBdM?si=1ZxrmZdB1h4-VRJ3  
+- SQL Server
+- HTML5
+- CSS3
+- Bootstrap
+- JavaScript
+- Docker
+- GitHub and GitHub Actions
+- Azure Blob Storage (for image storage, where configured)
 
-## 3. Main Features
+## 3. System Architecture
 
-The API includes the following functional areas:
+RaceDay follows a layered architecture.
 
-- **User Authentication:** User registration and login, with password hashing.
-- **User Management:** User-related functionality.
-- **Event Management:** Retrieve and manage event information.
-- **Event Types:** Manage and retrieve event type information.
-- **Categories:** Manage event categories.
-- **Enrolments:** Support participant enrolment functionality.
-- **Results:** Manage and retrieve event results.
-- **API Documentation:** Swagger UI allows endpoints to be explored and tested.
+The MVC application acts as the front-end interface through which users interact with the system.
+
+The MVC application communicates with the RESTful API, which handles application operations and database communication.
+
+The system architecture can be summarised as follows:
+
+User
+  |
+  v
+RaceDay MVC Web Application
+  |
+  v
+RaceDay RESTful API
+  |
+  v
+SQL Server Database
+
+Image uploads are handled through the API and Azure Blob Storage integration.
+
+The MVC application does not directly access the database.
 
 ## 4. User Roles
 
-The intended system roles are:
+### 4.1 Organiser
 
-- **Organiser:** Responsible for managing events and related information.
-- **Participant:** Able to view events and use participant-related functionality, such as enrolment and viewing results.
+The Organiser area is intended to support race event administration, including:
 
-Access to restricted operations must be controlled through role-based authorisation.
+- Access to the Organiser dashboard.
+- Event management.
+- Creating, updating and deleting events.
+- Managing event categories.
+- Viewing participant enrolments.
+- Capturing race results.
 
-## 5. Prerequisites
+### 4.2 Participant
 
-Before running the project, ensure that you have installed:
+The Participant area supports users who wish to participate in sporting events.
 
-- Visual Studio 2022 or a compatible IDE.
+Participant functionality includes:
+
+- Viewing available events.
+- Viewing event information.
+- Entering events.
+- Viewing personal event enrolments.
+- Viewing race results.
+- Accessing and updating profile information.
+
+## 5. Project Structure
+
+The solution contains the API and MVC application projects.
+
+Main project components include:
+
+- **RaceDay2.API** – RESTful API responsible for application operations and data access.
+- **RaceDay.MVC** – ASP.NET Core MVC web application providing the user interface.
+- **Models** – Application data and view models.
+- **Controllers** – Handle application requests and navigation.
+- **Views** – Razor views used to display the application pages.
+- **Services** – Handle communication between the MVC application and API.
+
+## 6. Prerequisites
+
+The following software is required to run the application:
+
+- Visual Studio 2022.
 - .NET 8 SDK.
-- Microsoft SQL Server Express.
-- SQL Server Management Studio (SSMS), if required for database management.
-- Git, if cloning the repository from GitHub.
+- SQL Server.
+- Docker Desktop.
+- Git.
 
-## 6. Database Configuration
+Docker Desktop must be running before executing Docker commands.
 
-The project uses SQL Server Express with a database named `RaceDayDB`.
+## 7. Database Configuration
 
-The connection string is configured in `appsettings.json`:
+The API requires a configured SQL Server database.
 
-```json
-{
-  "ConnectionStrings": {
-    "RaceDayConnection": "Server=(local)\\SQLEXPRESS;Database=RaceDayDB;Trusted_Connection=True;TrustServerCertificate=True;"
-  }
-}
+Before running the application:
+
+1. Ensure SQL Server is installed and running.
+2. Configure the database connection string in the API application's configuration.
+3. Ensure the database is created and the required tables are available.
+4. Do not commit database passwords or other sensitive connection details to GitHub.
+
+The MVC application communicates with the API rather than accessing SQL Server directly.
+
+## 8. Running the API
+
+The API must be running before accessing the MVC application.
+
+From PowerShell, execute:
+
+```powershell
+dotnet run --project "C:\Users\Student\source\repos\RaceDay2\RaceDay2.API.csproj" --urls "http://0.0.0.0:5000"
 ```
 
-Ensure that SQL Server Express is running and that the database exists before starting the API.
+The API will be available at:
 
-The application also uses JWT configuration for token generation and validation. Keep development keys out of public repositories in production environments.
+`http://localhost:5000`
 
-## 7. How to Run the Project
+Keep the API terminal window open while using the MVC application.
 
-1. Clone the repository or open the existing project in Visual Studio.
-2. Open the solution or `RaceDay2.API.csproj` file.
-3. Confirm that the database connection string in `appsettings.json` matches your SQL Server configuration.
-4. Ensure the `RaceDayDB` database and required tables are available.
-5. Restore the NuGet packages.
-6. Build the solution and resolve any build errors.
-7. Run the project using Visual Studio.
-8. Open Swagger UI in your browser:
+## 9. Running the MVC Application Locally
 
-   `https://localhost:7066/swagger/index.html`
+Open the RaceDay MVC project in Visual Studio.
 
-The port may differ depending on your local launch settings.
+Set RaceDay.MVC as the startup project and run the application.
 
-## 8. Testing the API
+The MVC application communicates with the API using the configured API base URL.
 
-The API can be tested through Swagger UI.
+Ensure the API is running before testing MVC functionality.
 
-1. Open the relevant endpoint.
-2. Select **Try it out**.
-3. Enter the required request data.
-4. Select **Execute**.
-5. Review the HTTP response code and response body.
+## 10. Authentication and Session Management
 
-Testing should cover successful requests, invalid login credentials, missing or invalid data, and access restrictions for different user roles.
+The application includes registration and login functionality.
 
-Automated unit tests should also be run where provided.
+The MVC application communicates with the API for authentication and uses session information to manage the logged-in user's details and role.
 
-## 9. Authentication and Security
+The intended role-based navigation provides separate areas for Organisers and Participants.
 
-Passwords are hashed before being stored in the database. The login endpoint verifies the supplied password against the stored password hash.
+Users can log out to end their application session.
 
-The API is configured to generate and validate JWT authentication tokens. Protected endpoints must use appropriate authorisation attributes to enforce access restrictions.
+## 11. Organiser Functionality
 
-The assignment requirements for session management and role-based access should be verified against the implemented authentication mechanism.
+The Organiser interface provides event administration functionality, including event management, category management, participant enrolments and results administration.
 
-## 10. Repository and Continuous Integration
+## 12. Participant Functionality
 
-The source code is maintained in GitHub. Version control is used to track development changes.
+The Participant interface provides access to event browsing, event information, event enrolment, personal event records, results and profile information.
 
-Where configured, GitHub Actions can be used to build the application and execute automated tests when changes are pushed to the repository.
+## 13. Azure Blob Storage
 
-The latest workflow result and test results should be checked before submission.
+Azure Blob Storage is used for image storage through the API integration.
 
-## 11. Conclusion
+The intended upload process is:
 
-The RaceDay API provides a backend foundation for managing events, users, categories, enrolments and results. It uses ASP.NET Core Web API, SQL Server and Entity Framework Core, with Swagger supporting API testing and documentation.
+1. The user selects an image through the MVC interface.
+2. The MVC application sends the image to the API.
+3. The API handles the upload to Azure Blob Storage.
+4. The resulting image reference is stored with the relevant application record.
+5. The image can subsequently be displayed in the application.
 
-Further verification of authentication, role-based authorisation, automated testing and deployment requirements should be completed according to the project specification.
+Azure storage credentials must be configured securely and must not be committed to the public repository.
+
+## 14. Docker Deployment
+
+The MVC application is containerised using Docker.
+
+The API runs on the Windows host machine, while the MVC application runs inside the Docker container.
+
+### 14.1 Build the Docker Image
+
+Open PowerShell and navigate to the MVC project directory:
+
+```powershell
+cd "C:\Users\Student\source\repos\RaceDay.MVC"
+```
+
+Build the image:
+
+```powershell
+docker build -f Dockerfile -t raceday-mvc:part3 .
+```
+
+### 14.2 Run the API
+
+Start the API on the host machine using the command in Section 8.
+
+The API must remain running.
+
+### 14.3 Run the MVC Container
+
+Execute:
+
+```powershell
+docker run -d --name raceday-mvc -p 8080:8080 -e ApiSettings__BaseUrl=http://host.docker.internal:5000/ raceday-mvc:part3
+```
+
+The `host.docker.internal` address allows the MVC container to communicate with the API running on the Windows host.
+
+### 14.4 Access the Application
+
+Open a browser and navigate to:
+
+`http://localhost:8080`
+
+### 14.5 Verify the Container
+
+To confirm that the MVC container is running:
+
+```powershell
+docker ps
+```
+
+To view the container logs:
+
+```powershell
+docker logs raceday-mvc
+```
+
+To stop the container:
+
+```powershell
+docker stop raceday-mvc
+```
+
+To remove the container:
+
+```powershell
+docker rm raceday-mvc
+```
+
+## 15. Continuous Integration and GitHub Actions
+
+GitHub is used for source-code management and version control.
+
+GitHub Actions is used to automate the build and validation process.
+
+The workflow is intended to restore dependencies, build the solution and execute the available automated tests.
+
+The latest successful GitHub Actions workflow execution is included as submission evidence below.
+
+## 16. GitHub Actions Evidence
+
+![GitHub Actions Successful Build](docs/images/github-actions-success.png)
+
+*Replace this image with a screenshot of your actual successful GitHub Actions workflow.*
+
+## 17. Docker Evidence
+
+Docker is used to package and run the RaceDay MVC application in a container.
+
+The Docker image is named:
+
+`raceday-mvc:part3`
+
+The running container is named:
+
+`raceday-mvc`
+
+The application is accessed through:
+
+`http://localhost:8080`
+
+## 18. Video Demonstration
+
+The demonstration video presents the RaceDay application, its functionality and the deployment process.
+
+Video link:
+
+[Insert your demonstration video link here]
+
+## 19. GitHub Repository
+
+GitHub repository:
+
+[Insert your GitHub repository link here]
+
+## 20. Conclusion
+
+RaceDay Part 3 extends the existing system by providing an MVC web application that communicates with the Part 2 RESTful API.
+
+The project brings together web application development, API integration, role-based functionality, database communication, image storage integration, version control and Docker deployment.
+
+The completed system demonstrates the application of software development concepts covered in PROG6212 Programming 2B.

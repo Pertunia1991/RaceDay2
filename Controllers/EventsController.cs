@@ -149,7 +149,7 @@ namespace RaceDay2.API.Controllers
         [RequestSizeLimit(5 * 1024 * 1024)]
         public async Task<IActionResult> UploadBanner(
             int id,
-            [FromForm] IFormFile file,
+            IFormFile file,
             [FromServices] BlobStorageService blobStorage)
         {
             var userIdClaim =

@@ -218,7 +218,7 @@ namespace RaceDay2.API.Controllers
         [RequestSizeLimit(5 * 1024 * 1024)]
         public async Task<IActionResult> UploadProfilePicture(
             int id,
-            [FromForm] IFormFile file,
+            IFormFile file,
             [FromServices] BlobStorageService blobStorage)
         {
             var currentUserID = GetCurrentUserID();

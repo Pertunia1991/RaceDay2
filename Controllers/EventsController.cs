@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿
+using System.Security.Claims;
+using Azure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay2.API.Data;
 using RaceDay2.API.Models;
+using RaceDay2.API.Services;
 
 namespace RaceDay2.API.Controllers
 {
@@ -19,7 +23,6 @@ namespace RaceDay2.API.Controllers
         }
 
         // GET: api/Events
-        // Both authenticated Organisers and Participants can view events.
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
         {
@@ -27,22 +30,18 @@ namespace RaceDay2.API.Controllers
         }
 
         // GET: api/Events/1
-        // Both authenticated Organisers and Participants can view an event.
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Event>> GetEvent(int id)
         {
             var item = await _context.Events.FindAsync(id);
 
             if (item == null)
-            {
                 return NotFound();
-            }
 
             return Ok(item);
         }
 
         // POST: api/Events
-        // Only Organisers can create events.
         [Authorize(Roles = "Organiser")]
         [HttpPost]
         public async Task<ActionResult<Event>> CreateEvent(Event item)
@@ -77,23 +76,18 @@ namespace RaceDay2.API.Controllers
         }
 
         // PUT: api/Events/1
-        // Only Organisers can update events.
         [Authorize(Roles = "Organiser")]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateEvent(
             int id, Event item)
         {
             if (id != item.EventID)
-            {
                 return BadRequest("The event ID does not match.");
-            }
 
             var existing = await _context.Events.FindAsync(id);
 
             if (existing == null)
-            {
                 return NotFound();
-            }
 
             if (!await _context.Users.AnyAsync(
                 u => u.UserID == item.OrganiserID))
@@ -122,7 +116,6 @@ namespace RaceDay2.API.Controllers
         }
 
         // DELETE: api/Events/1
-        // Only Organisers can delete events.
         [Authorize(Roles = "Organiser")]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteEvent(int id)
@@ -130,9 +123,7 @@ namespace RaceDay2.API.Controllers
             var item = await _context.Events.FindAsync(id);
 
             if (item == null)
-            {
                 return NotFound();
-            }
 
             if (await _context.Categories.AnyAsync(
                     c => c.EventID == id) ||
@@ -148,6 +139,72 @@ namespace RaceDay2.API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // POST: api/Events/1/banner
+        // Only the Organiser who owns the event can upload its banner.
+        [Authorize(Roles = "Organiser")]
+        [HttpPost("{id:int}/banner")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(5 * 1024 * 1024)]
+        public async Task<IActionResult> UploadBanner(
+            int id,
+            [FromForm] IFormFile file,
+            [FromServices] BlobStorageService blobStorage)
+        {
+            var userIdClaim =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userIdClaim, out int currentUserId))
+                return Unauthorized();
+
+            var eventItem = await _context.Events.FindAsync(id);
+
+            if (eventItem == null)
+                return NotFound("Event not found.");
+
+            if (eventItem.OrganiserID != currentUserId)
+                return Forbid();
+
+            if (file == null || file.Length == 0)
+                return BadRequest("Please select an image.");
+
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest("Image must not exceed 5 MB.");
+
+            var allowedTypes = new[]
+            {
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/webp"
+            };
+
+            if (!allowedTypes.Contains(
+                file.ContentType.ToLowerInvariant()))
+            {
+                return BadRequest(
+                    "Only JPG, PNG, GIF and WEBP images are allowed.");
+            }
+
+            try
+            {
+                string url = await blobStorage.UploadAsync(
+                    file,
+                    "event-banners");
+
+                eventItem.BannerImageURL = url;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { imageUrl = url });
+            }
+            catch (RequestFailedException)
+            {
+                return StatusCode(
+                    503,
+                    "Azure Blob Storage is currently unavailable.");
+            }
         }
     }
 }

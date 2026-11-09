@@ -1,12 +1,14 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Azure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay2.API.Data;
 using RaceDay2.API.Models;
+using RaceDay2.API.Services;
 
 namespace RaceDay2.API.Controllers
 {
@@ -207,6 +209,70 @@ namespace RaceDay2.API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // POST: api/Users/1/profile-picture
+        // USERS: UPLOAD OWN PROFILE PICTURE
+        [HttpPost("{id:int}/profile-picture")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(5 * 1024 * 1024)]
+        public async Task<IActionResult> UploadProfilePicture(
+            int id,
+            [FromForm] IFormFile file,
+            [FromServices] BlobStorageService blobStorage)
+        {
+            var currentUserID = GetCurrentUserID();
+
+            if (currentUserID == null)
+                return Unauthorized();
+
+            if (currentUserID != id)
+                return Forbid();
+
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+                return NotFound("User not found.");
+
+            if (file == null || file.Length == 0)
+                return BadRequest("Please select a profile picture.");
+
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest("Image must not exceed 5 MB.");
+
+            var allowedTypes = new[]
+            {
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "image/webp"
+            };
+
+            if (!allowedTypes.Contains(
+                file.ContentType.ToLowerInvariant()))
+            {
+                return BadRequest(
+                    "Only JPG, PNG, GIF and WEBP images are allowed.");
+            }
+
+            try
+            {
+                string url = await blobStorage.UploadAsync(
+                    file,
+                    "profile-pictures");
+
+                user.ProfilePictureURL = url;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { imageUrl = url });
+            }
+            catch (RequestFailedException)
+            {
+                return StatusCode(
+                    503,
+                    "Azure Blob Storage is currently unavailable.");
+            }
         }
 
         // DELETE: api/Users/1

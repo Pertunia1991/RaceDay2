@@ -254,13 +254,7 @@ The workflow is intended to restore dependencies, build the solution and execute
 
 The latest successful GitHub Actions workflow execution is included as submission evidence below.
 
-## 16. GitHub Actions Evidence
-
-![GitHub Actions Successful Build](docs/images/github-actions-success.png)
-
-*Replace this image with a screenshot of your actual successful GitHub Actions workflow.*
-
-## 17. Docker Evidence
+## 16. Docker Evidence
 
 Docker is used to package and run the RaceDay MVC application in a container.
 
@@ -282,13 +276,13 @@ The demonstration video presents the RaceDay application, its functionality and 
 
 Video link:
 
-[Insert your demonstration video link here]
+https://youtu.be/h3P0Vv34Su8?si=ry1tN2JJGYDq1aMl 
 
 ## 19. GitHub Repository
 
 GitHub repository:
 
-[Insert your GitHub repository link here]
+https://github.com/Pertunia1991/RaceDay2 
 
 ## 20. Conclusion
 
